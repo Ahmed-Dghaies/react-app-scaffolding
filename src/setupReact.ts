@@ -2,6 +2,7 @@ import { execSync } from "child_process";
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
+import { writeFile } from "./utils/fileHelpers.ts";
 
 /**
  * Creates a new React app using create-react-app with TypeScript template
@@ -24,9 +25,26 @@ export const setupReactProject = async (projectName: string): Promise<string> =>
       cwd: `${process.cwd()}/${projectName}`,
     });
 
+    const projectPath = path.resolve(process.cwd(), projectName);
+
+    // Replace App.tsx with our own App.tsx
+    const appPath = path.join(projectPath, "src", "App.tsx");
+    await writeFile(
+      appPath,
+      `import "./App.css";
+      const App = () => {
+        return (
+          <div>
+              App content
+          </div>  
+        );
+      };
+
+      export default App;`
+    );
+
     spinner.succeed(chalk.green("React app created successfully!"));
 
-    const projectPath = path.resolve(process.cwd(), projectName);
     return projectPath;
   } catch (error) {
     spinner.fail(chalk.red("Failed to create React app"));

@@ -14,19 +14,19 @@ import path from "path";
  * @param {string} options.children - Custom children content (overrides wrapping existing content)
  */
 
-interface WrapAppReturnOptions {
+interface WrapMainReturnOptions {
   props?: string;
   selfClosing?: boolean;
   children?: string;
 }
 
-export const wrapAppReturn = async (
+export const wrapMainReturn = async (
   projectPath: string,
   wrapperComponent: string,
   wrapperImport: string,
-  options: WrapAppReturnOptions = {}
+  options: WrapMainReturnOptions = {}
 ) => {
-  const appPath = path.join(projectPath, "src", "App.tsx");
+  const appPath = path.join(projectPath, "src", "MAIN.tsx");
   let content = await fs.readFile(appPath, "utf-8");
 
   console.log("=== DEBUGGING ===");
@@ -37,55 +37,27 @@ export const wrapAppReturn = async (
     content = addImportToContent(content, wrapperImport);
   }
 
-  // FIXED: Remove the semicolon from the regex pattern
-  const returnMatch = content.match(/return\s*\(\s*([\s\S]*?)\s*\)\s*\n\s*}/);
+  // Look for the JSX inside createRoot().render()
+  const renderMatch = content.match(/\.render\s*\(\s*([\s\S]*?)\s*\)/);
 
-  console.log("returnMatch:", returnMatch);
+  console.log("renderMatch:", renderMatch);
 
-  if (!returnMatch) {
-    // Try alternative patterns
-    const patterns = [
-      /return\s*\(\s*([\s\S]*?)\s*\)\s*\n\s*}/, // with closing brace
-      /return\s*\(\s*([\s\S]*?)\s*\)/, // without semicolon or brace
-      /return\s*\(([^)]*)\)/, // simple parentheses
-    ];
-
-    let match: RegExpMatchArray | null = null;
-    for (const pattern of patterns) {
-      match = content.match(pattern);
-      if (match) {
-        console.log(`Found match with pattern: ${pattern}`);
-        break;
-      }
-    }
-
-    if (!match) {
-      throw new Error("Could not find App function return statement");
-    }
-
-    const currentReturn = match[1].trim();
-    console.log("Current return content:", currentReturn);
-
-    // Build the wrapper
-    const props = options.props ? ` ${options.props}` : "";
-    const wrappedReturn = `<${wrapperComponent}${props}>\n      ${currentReturn}\n    </${wrapperComponent}>`;
-
-    // Replace the return content
-    content = content.replace(match[0], `return (\n    ${wrappedReturn}\n  )`);
-  } else {
-    const currentReturn = returnMatch[1].trim();
-    console.log("Current return content:", currentReturn);
-
-    // Build the wrapper
-    const props = options.props ? ` ${options.props}` : "";
-    const wrappedReturn = `<${wrapperComponent}${props}>\n      ${currentReturn}\n    </${wrapperComponent}>`;
-
-    // Replace the return content
-    content = content.replace(
-      /return\s*\(\s*([\s\S]*?)\s*\)\s*\n\s*}/,
-      `return (\n    ${wrappedReturn}\n  )\n}`
-    );
+  if (!renderMatch) {
+    throw new Error("Could not find createRoot().render() statement");
   }
+
+  const currentJsx = renderMatch[1].trim();
+  console.log("Current JSX content:", currentJsx);
+
+  // Build the wrapper - handle the case where we might have commas or semicolons
+  const props = options.props ? ` ${options.props}` : "";
+  const wrappedJsx = `<${wrapperComponent}${props}>\n    ${currentJsx.replace(
+    /,$/,
+    ""
+  )}\n  </${wrapperComponent}>`;
+
+  // Replace the JSX content within render()
+  content = content.replace(renderMatch[0], `.render(\n    ${wrappedJsx}\n  )`);
 
   await fs.writeFile(appPath, content, "utf-8");
 };
@@ -115,12 +87,12 @@ const addImportToContent = (content: string, importStatement: string) => {
 };
 
 /**
- * Adds an import statement to App.tsx if not already present
+ * Adds an import statement to main.tsx if not already present
  * @param {string} projectPath - Path to the project
  * @param {string} importStatement - Import statement to add
  */
-export const addImportToApp = async (projectPath: string, importStatement: string) => {
-  const appPath = path.join(projectPath, "src", "App.tsx");
+export const addImportToMain = async (projectPath: string, importStatement: string) => {
+  const appPath = path.join(projectPath, "src", "main.tsx");
   let content = await fs.readFile(appPath, "utf-8");
 
   content = addImportToContent(content, importStatement);
@@ -129,7 +101,7 @@ export const addImportToApp = async (projectPath: string, importStatement: strin
 };
 
 /**
- * Replaces content in App.tsx using a simple string replacement
+ * Replaces content in main.tsx using a simple string replacement
  * @param {string} projectPath - Path to the project
  * @param {string} searchString - String to search for
  * @param {string} replaceString - String to replace with
@@ -139,7 +111,7 @@ export const replaceInApp = async (
   searchString: string,
   replaceString: string
 ) => {
-  const appPath = path.join(projectPath, "src", "App.tsx");
+  const appPath = path.join(projectPath, "src", "main.tsx");
   let content = await fs.readFile(appPath, "utf-8");
 
   content = content.replace(searchString, replaceString);

@@ -34,14 +34,3 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
     return false;
   }
 };
-
-/**
- * Replaces the entire App.tsx content with new content
- * Used when we need to completely rewrite the App component
- * @param {string} projectPath - Path to the project
- * @param {string} newContent - New App.tsx content
- */
-export const replaceAppContent = async (projectPath: string, newContent: string) => {
-  const appPath = path.join(projectPath, "src", "App.tsx");
-  await writeFile(appPath, newContent);
-};

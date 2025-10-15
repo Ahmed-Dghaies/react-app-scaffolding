@@ -3,7 +3,7 @@ import path from "path";
 import chalk from "chalk";
 import ora from "ora";
 import { writeFile } from "../utils/fileHelpers.ts";
-import { wrapAppReturn, addImportToApp } from "../utils/wrapAppReturn.ts";
+import { wrapMainReturn, addImportToMain } from "../utils/wrapMainReturn.ts";
 
 /**
  * Sets up Redux Toolkit in the React project
@@ -91,12 +91,12 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
     spinner.text = "Wrapping App with Redux Provider...";
 
-    // Add store import to App.tsx
-    await addImportToApp(projectPath, "import { Provider } from 'react-redux';");
-    await addImportToApp(projectPath, "import { store } from './store/store';");
+    // Add store import to main.tsx
+    await addImportToMain(projectPath, "import { Provider } from 'react-redux';");
+    await addImportToMain(projectPath, "import { store } from './store/store';");
 
     // Wrap App with Provider
-    await wrapAppReturn(projectPath, "Provider", "import { Provider } from 'react-redux';", {
+    await wrapMainReturn(projectPath, "Provider", "import { Provider } from 'react-redux';", {
       props: "store={store}",
     });
 

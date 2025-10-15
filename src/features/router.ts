@@ -3,7 +3,7 @@ import path from "path";
 import chalk from "chalk";
 import ora from "ora";
 import { writeFile } from "../utils/fileHelpers.ts";
-import { wrapAppReturn, addImportToApp } from "../utils/wrapAppReturn.ts";
+import { wrapMainReturn, addImportToMain } from "../utils/wrapMainReturn.ts";
 
 /**
  * Sets up React Router in the React project
@@ -80,7 +80,7 @@ export const router = createBrowserRouter([
     spinner.text = "Wrapping App with RouterProvider...";
 
     // Wrap App with RouterProvider
-    await wrapAppReturn(
+    await wrapMainReturn(
       projectPath,
       "Router",
       "import { BrowserRouter as Router } from 'react-router';",
