@@ -15,7 +15,7 @@ export const setupReactProject = async (projectName: string): Promise<string> =>
   try {
     // Use vite react with TypeScript template
 
-    execSync(`CI=true npm create vite@latest ${projectName} -- --template react-ts -y`, {
+    execSync(`yes no | npm create vite@latest ${projectName} -- --template react-ts -y`, {
       stdio: "inherit",
       cwd: process.cwd(),
     });

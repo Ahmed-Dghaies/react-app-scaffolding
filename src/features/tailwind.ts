@@ -15,7 +15,12 @@ export const setupTailwind = async (projectPath: string) => {
 
   try {
     // Install Tailwind and its dependencies
-    execSync("npm install -D tailwindcss postcss autoprefixer", {
+    execSync("npm install tailwindcss @tailwindcss/vite", {
+      stdio: "inherit",
+      cwd: projectPath,
+    });
+
+    execSync("npm install -D tw-animate-css", {
       stdio: "inherit",
       cwd: projectPath,
     });
@@ -39,23 +44,28 @@ export const setupTailwind = async (projectPath: string) => {
 
     await writeFile(path.join(projectPath, "tailwind.config.js"), tailwindConfig);
 
-    // Create postcss.config.js
-    const postcssConfig = `export default {
-        plugins: {
-            tailwindcss: {},
-            autoprefixer: {},
-        },
-        }`;
+    // Update vite config
+    const viteConfig = `import path from "path"
+import tailwindcss from "@tailwindcss/vite"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
 
-    await writeFile(path.join(projectPath, "postcss.config.js"), postcssConfig);
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})`;
+
+    await writeFile(path.join(projectPath, "vite.config.ts"), viteConfig);
 
     spinner.text = "Updating CSS files...";
 
     // Update src/index.css with Tailwind directives
-    const indexCSS = `@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
-        `;
+    const indexCSS = `@import "tailwindcss";`;
 
     await writeFile(path.join(projectPath, "src", "index.css"), indexCSS);
 

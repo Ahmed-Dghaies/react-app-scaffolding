@@ -53,6 +53,7 @@ export const setupShadcn = async (projectPath: string) => {
         paths: {
           "@/*": ["./src/*"],
         },
+        types: ["vite/client"],
       },
       include: ["src"],
       exclude: ["node_modules", "dist"],

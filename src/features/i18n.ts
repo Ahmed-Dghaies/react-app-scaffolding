@@ -67,12 +67,10 @@ import { initReactI18next } from "react-i18next";
 
 import type { Resource } from "i18next";
 
-const modules: Record<string, { default: any }> = import.meta.glob(
-  "./assets/languages/*/*.json",
-  {
-    eager: true,
-  },
-);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const modules: Record<string, { default: any }> = import.meta.glob("./assets/languages/*/*.json", {
+  eager: true,
+});
 
 const namespaces = ["global"];
 
@@ -80,7 +78,7 @@ const loadTranslations = () => {
   const resources: Resource = {};
 
   for (const path in modules) {
-    const match = path.match(/\\.\\/assets\\/languages\\/(.*?)\\/(.*?)\\.json$/);
+    const match = path.match(/\.\/assets\/languages\/(.*?)\/(.*?)\.json$/);
     if (!match) continue;
 
     const [, lang, ns] = match;
@@ -110,8 +108,7 @@ i18n
     },
   });
 
-export default i18n;
-`;
+export default i18n;`;
 
     await writeFile(path.join(projectPath, "src", "i18n.ts"), i18nConfig);
 

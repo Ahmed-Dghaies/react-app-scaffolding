@@ -155,7 +155,7 @@ export const setupCLI = async () => {
 
     if (answers.useRouter) {
       console.log(chalk.gray("React Router is configured with sample routes."));
-      console.log(chalk.gray("Edit 'src/routes.tsx' to add more routes.\n"));
+      console.log(chalk.gray("Edit 'src/App.tsx' to add routes.\n"));
     }
 
     if (answers.useI18n) {

@@ -1,7 +1,7 @@
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFile } from "../utils/fileHelpers.ts";
+import { readFile, writeFile } from "../utils/fileHelpers.ts";
 
 /**
  * Creates a Header component
@@ -35,18 +35,14 @@ export const setupHeader = async (
     // Build the header component
     const headerComponent = `${imports}
 interface HeaderProps {
-  handleLogout?: () => void;
-  isAuthenticated?: boolean;
   currentLanguage?: string;
   handleLanguageChange?: (lang: string) => void;
 }
 
-export function Header({
-  handleLogout,
-  isAuthenticated = false,
+const Header = ({
   currentLanguage = 'en',
   handleLanguageChange,
-}: HeaderProps) {
+}: HeaderProps) => {
   ${hasRouter ? "const { pathname } = useLocation();" : ""}
   ${hasI18n ? "const { t } = useTranslation('global');" : ""}
 
@@ -95,7 +91,7 @@ export function Header({
                 ? `
             <select
               value={currentLanguage}
-              onChange={(e) => handleLanguageChange?.(e.target.value)}
+              onChange={(e) => handleLanguageChange(e.target.value)}
               className="px-2 py-1 border rounded-md text-sm"
             >
               <option value="en">🇬🇧 EN</option>
@@ -104,28 +100,34 @@ export function Header({
             `
                 : ""
             }
-            {isAuthenticated && (
-              <>
-                <button className="p-2 hover:bg-accent rounded-md">
-                  <Settings className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 hover:bg-accent rounded-md"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </>
-            )}
           </div>
         </div>
       </div>
     </header>
   );
 }
+
+export default Header;
 `;
 
-    await writeFile(path.join(componentsDir, "Header.tsx"), headerComponent);
+    const LayoutDir = path.join(projectPath, "src", "components", "Layout");
+
+    await writeFile(path.join(LayoutDir, "Header.tsx"), headerComponent);
+
+    let publicLayoutContent = await readFile(path.join(LayoutDir, "PublicLayout.tsx"));
+
+    publicLayoutContent = `import Header from "./Header";
+    ${publicLayoutContent}`;
+
+    publicLayoutContent = publicLayoutContent.replace(
+      `<div className="h-screen overflow-x-hidden flex flex-col">`,
+      `<div className="h-screen overflow-x-hidden flex flex-col">
+        <Header
+          currentLanguage={i18n.language}
+          handleLanguageChange={(lang: string) => i18n.changeLanguage(lang)}
+        />`
+    );
+    await writeFile(path.join(LayoutDir, "PublicLayout.tsx"), publicLayoutContent);
 
     spinner.succeed(chalk.green("Header component created!"));
 

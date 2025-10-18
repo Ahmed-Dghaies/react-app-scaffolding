@@ -11,11 +11,11 @@ import { writeFile } from "../utils/fileHelpers.ts";
 export const setupReactHookForm = async (projectPath: string) => {
   console.log(chalk.blue("\n📝 Setting up React Hook Form..."));
 
-  const spinner = ora("Installing React Hook Form and Zod...").start();
+  const spinner = ora("Installing React Hook Form and Arktype...").start();
 
   try {
     // Install React Hook Form and Zod for validation
-    execSync("npm install react-hook-form @hookform/resolvers zod", {
+    execSync("npm install react-hook-form @hookform/resolvers arktype", {
       stdio: "inherit",
       cwd: projectPath,
     });
@@ -29,25 +29,27 @@ export const setupReactHookForm = async (projectPath: string) => {
 
     // Create a sample form component with validation
     const exampleForm = `import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { type } from "arktype";
 
 // Define validation schema
-const formSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  email: z.string().email('Invalid email address'),
-  age: z.number().min(18, 'Must be at least 18 years old'),
+export const formSchema = type({
+  username: "string>0",
+  email: "string>0",
+  age: "number>0",
 });
 
-type FormData = z.infer<typeof formSchema>;
+type formSchemaType = typeof formSchema.infer;
 
 export function ExampleForm() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  } = = useForm<formSchemaType>({
+    resolver: arktypeResolver(formSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: { username: "", email: "", age: 20 },
   });
 
   const onSubmit = (data: FormData) => {
@@ -117,7 +119,7 @@ export function ExampleForm() {
 
     console.log(chalk.green("✓ React Hook Form is ready to use!"));
     console.log(chalk.gray("  - Example: src/components/ExampleForm.tsx"));
-    console.log(chalk.gray("  - Includes Zod validation"));
+    console.log(chalk.gray("  - Includes arktypes validation"));
   } catch (error) {
     spinner.fail(chalk.red("Failed to setup React Hook Form"));
     throw error;

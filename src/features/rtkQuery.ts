@@ -81,21 +81,20 @@ export const {
 
     // Add API import
     if (!storeContent.includes("import { apiSlice }")) {
-      storeContent = storeContent.replace(
-        "import counterReducer from './counterSlice';",
-        "import counterReducer from './counterSlice';\nimport { apiSlice } from '../services/api';"
-      );
+      storeContent = `import { apiSlice } from "@/services/api";
+${storeContent}`;
     }
 
     // Add API reducer and middleware
     storeContent = storeContent.replace(
-      /reducer: \{[\s\S]*?\}/,
-      `reducer: {
-    counter: counterReducer,
-    [apiSlice.reducerPath]: apiSlice.reducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(apiSlice.middleware)`
+      "counter: counterReducer,",
+      `counter: counterReducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,`
+    );
+
+    storeContent = storeContent.replace(
+      "getDefaultMiddleware()",
+      "getDefaultMiddleware().concat(apiSlice.middleware)"
     );
 
     await writeFile(storePath, storeContent);

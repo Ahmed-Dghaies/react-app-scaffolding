@@ -28,8 +28,17 @@ export const setupRedux = async (projectPath: string) => {
     // Create store directory
     const storeDir = path.join(projectPath, "src", "store");
 
+    // Create createAppSlice
+    const createAppSlice = `import { asyncThunkCreator, buildCreateSlice } from "@reduxjs/toolkit";
+
+export const createAppSlice = buildCreateSlice({
+  creators: { asyncThunk: asyncThunkCreator },
+});`;
+
+    await writeFile(path.join(storeDir, "createAppSlice.ts"), createAppSlice);
+
     // Create a sample counter slice
-    const counterSlice = `import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+    const counterSlice = `import { createAppSlice } from "@/store/createAppSlice";
 
 export interface CounterState {
   value: number;
@@ -39,20 +48,20 @@ const initialState: CounterState = {
   value: 0,
 };
 
-export const counterSlice = createSlice({
+export const counterSlice = createAppSlice({
   name: 'counter',
   initialState,
-  reducers: {
-    increment: (state) => {
+  reducers: (create) => ({
+    increment: create.reducer<void>((state, action) => {
       state.value += 1;
-    },
-    decrement: (state) => {
+    }),
+    decrement: create.reducer<void>((state, action) => {
       state.value -= 1;
-    },
-    incrementByAmount: (state, action: PayloadAction<number>) => {
-      state.value += action.payload;
-    },
-  },
+    }),
+    incrementByAmount: create.reducer<number>((state, action) => {
+      state.value += number;
+    }),
+  }),
 });
 
 export const { increment, decrement, incrementByAmount } = counterSlice.actions;
@@ -63,29 +72,66 @@ export default counterSlice.reducer;
     await writeFile(path.join(storeDir, "counterSlice.ts"), counterSlice);
 
     // Create the Redux store
-    const storeContent = `import { configureStore } from '@reduxjs/toolkit';
-import counterReducer from './counterSlice';
+    const storeContent = `import {
+  Action,
+  combineSlices,
+  configureStore,
+  isRejectedWithValue,
+  Middleware,
+  ThunkAction,
+} from "@reduxjs/toolkit";
+import counterReducer from "./counterSlice";
+import { setupListeners } from "@reduxjs/toolkit/query";
 
-export const store = configureStore({
-  reducer: {
-    counter: counterReducer,
-  },
+const rootReducer = combineSlices({
+  counter: counterReducer,
 });
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
-`;
+export type RootState = ReturnType<typeof rootReducer>;
+
+const rtkQueryErrorLogger: Middleware = () => (next) => (action) => {
+  if (isRejectedWithValue(action)) {
+    const errMsg =
+      (action.payload as { data: { message: string } })?.data?.message || "Request failed";
+    console.error(errMsg, action.payload);
+  }
+  return next(action);
+};
+
+export const makeStore = (preloadedState?: Partial<RootState>) => {
+  const store = configureStore({
+    reducer: rootReducer,
+    middleware: (getDefaultMiddleware) => {
+      return getDefaultMiddleware().concat(rtkQueryErrorLogger);
+    },
+    preloadedState,
+  });
+
+  setupListeners(store.dispatch);
+  return store;
+};
+
+export const store = makeStore();
+
+export type AppStore = typeof store;
+
+export type AppDispatch = AppStore["dispatch"];
+export type AppThunk<ThunkReturnType = void> = ThunkAction<
+  ThunkReturnType,
+  RootState,
+  unknown,
+  Action
+>;`;
 
     await writeFile(path.join(storeDir, "store.ts"), storeContent);
 
     // Create hooks file for typed Redux hooks
-    const hooksContent = `import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from './store';
+    const hooksContent = `import { useDispatch, useSelector } from "react-redux";
 
-// Use throughout your app instead of plain \`useDispatch\` and \`useSelector\`
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-`;
+import type { AppDispatch, RootState } from "./store";
+
+export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
+export const useAppSelector = useSelector.withTypes<RootState>();`;
 
     await writeFile(path.join(storeDir, "hooks.ts"), hooksContent);
 
@@ -103,9 +149,6 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
     spinner.succeed(chalk.green("Redux Toolkit configured successfully!"));
 
     console.log(chalk.green("✓ Redux Toolkit is ready to use!"));
-    console.log(chalk.gray("  - Store: src/store/store.ts"));
-    console.log(chalk.gray("  - Sample slice: src/store/counterSlice.ts"));
-    console.log(chalk.gray("  - Typed hooks: src/store/hooks.ts"));
   } catch (error) {
     spinner.fail(chalk.red("Failed to setup Redux Toolkit"));
     throw error;

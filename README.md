@@ -55,7 +55,6 @@ react-app-scaffolding
 ### With Tailwind CSS
 
 - Tailwind configuration
-- PostCSS setup
 - Utility classes ready to use
 
 ### With Shadcn UI
