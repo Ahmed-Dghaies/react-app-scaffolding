@@ -133,7 +133,7 @@ export const setupCLI = async () => {
     }
 
     if (answers.useHeader) {
-      await setupHeader(projectPath, answers.useRouter, answers.useI18n);
+      await setupHeader(projectPath, answers.useRouter, answers.useI18n, answers.useShadcn);
     }
 
     // Print final instructions
