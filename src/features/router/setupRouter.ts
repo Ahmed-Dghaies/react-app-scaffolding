@@ -2,14 +2,18 @@ import { execSync } from "child_process";
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFile } from "../utils/fileHelpers.ts";
-import { wrapMainReturn, addImportToMain } from "../utils/wrapMainReturn.ts";
+import { writeFile } from "../../utils/fileHelpers.ts";
+import { wrapMainReturn } from "../../utils/wrapMainReturn.ts";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Sets up React Router in the React project
  * @param {string} projectPath - Path to the project
  */
-export const setupRouter = async (projectPath: string) => {
+export const setupRouter = async (projectPath: string, hasI18n: boolean) => {
   console.log(chalk.blue("\n🛣️  Setting up React Router..."));
 
   const spinner = ora("Installing React Router...").start();
@@ -29,13 +33,14 @@ export const setupRouter = async (projectPath: string) => {
     const pagesDir = path.join(projectPath, "src", "pages");
 
     // Create Home page
-    const homePage = `import React from 'react';
+    const homePage = `${hasI18n ? "import { useTranslation } from 'react-i18next';" : ""}
 
 export default function Home() {
+  ${hasI18n ? "const { t } = useTranslation();" : ""}
+
   return (
-    <div>
-      <h1>Home Page</h1>
-      <p>Welcome to your React app with routing!</p>
+    <div className="flex justify-center">
+      <p>${hasI18n ? "{t('home_message')}" : "Welcome to your React app with routing!"}</p>
     </div>
   );
 }
@@ -44,60 +49,28 @@ export default function Home() {
     await writeFile(path.join(pagesDir, "Home.tsx"), homePage);
 
     // Create public layout
-    const publicLayout = `import { useTranslation } from "react-i18next";
-import { Outlet } from "react-router";
-
-const PublicLayout = () => {
-  const { i18n } = useTranslation();
-
-  return (
-    <div className="h-screen overflow-x-hidden flex flex-col">
-      <main className="flex-grow flex flex-col justify-center p-2">
-        <Outlet />
-      </main>
-    </div>
-  );
-};
-
-export default PublicLayout;`;
+    const fs = await import("fs/promises");
+    const publicLayout = await fs.readFile(path.join(__dirname, "publicLayout.txt"), "utf-8");
 
     const publicLayoutDir = path.join(projectPath, "src", "components", "Layout");
     await writeFile(path.join(publicLayoutDir, "PublicLayout.tsx"), publicLayout);
 
     // Update App
-    const App = `import { Route, Routes } from "react-router";
 
-import PublicLayout from "@/components/Layout/PublicLayout";
-import Home from "@/pages/Home";
-import About from "@/pages/About";
-
-import "./App.css";
-
-const App = () => {
-  return (
-    <Routes>
-      <Route element={<PublicLayout />}>
-        <Route path="/about" element={<About />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="*" element={<Home />} />
-      </Route>
-    </Routes>
-  );
-};
-
-export default App;`;
+    const AppContent = await fs.readFile(path.join(__dirname, "app.txt"), "utf-8");
 
     const appDir = path.join(projectPath, "src", "App.tsx");
-    await writeFile(appDir, App);
+    await writeFile(appDir, AppContent);
 
     // Create About page
-    const aboutPage = `import React from 'react'
-
+    const aboutPage = `${hasI18n ? "import { useTranslation } from 'react-i18next';" : ""}
+    
 export default function About() {
+  ${hasI18n ? "const { t } = useTranslation();" : ""}
+
   return (
-    <div>
-      <h1>About Page</h1>
-      <p>This is the about page.</p>
+    <div className="flex justify-center">
+      <p>${hasI18n ? "{t('about_message')}" : "This is the About page."}</p>
     </div>
   );
 }

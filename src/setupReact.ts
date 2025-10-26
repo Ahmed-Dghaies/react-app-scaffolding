@@ -2,7 +2,7 @@ import { execSync } from "child_process";
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFile } from "./utils/fileHelpers.ts";
+import { writeFile, deleteFile } from "./utils/fileHelpers.ts";
 
 /**
  * Creates a new React app using create-react-app with TypeScript template
@@ -31,8 +31,7 @@ export const setupReactProject = async (projectName: string): Promise<string> =>
     const appPath = path.join(projectPath, "src", "App.tsx");
     await writeFile(
       appPath,
-      `import "./App.css";
-      const App = () => {
+      `const App = () => {
         return (
           <div>
               App content
@@ -42,6 +41,11 @@ export const setupReactProject = async (projectName: string): Promise<string> =>
 
       export default App;`
     );
+
+    // Delete unnecessary files
+    await deleteFile(path.join(projectPath, "src", "App.css"));
+    await deleteFile(path.join(projectPath, "public", "vite.svg"));
+    await deleteFile(path.join(projectPath, "src", "assets", "react.svg"));
 
     spinner.succeed(chalk.green("React app created successfully!"));
 

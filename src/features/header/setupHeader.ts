@@ -1,7 +1,8 @@
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { readFile, writeFile } from "../utils/fileHelpers.ts";
+import { promises as fs } from "fs";
+import { execSync } from "child_process";
 
 /**
  * Creates a Header component
@@ -12,7 +13,8 @@ import { readFile, writeFile } from "../utils/fileHelpers.ts";
 export const setupHeader = async (
   projectPath: string,
   hasRouter: boolean = false,
-  hasI18n: boolean = false
+  hasI18n: boolean = false,
+  hasShadcn: boolean = false
 ) => {
   console.log(chalk.blue("\n🎨 Creating Header component..."));
 
@@ -20,19 +22,31 @@ export const setupHeader = async (
 
   try {
     const componentsDir = path.join(projectPath, "src", "components");
+    const layoutDir = path.join(componentsDir, "Layout");
+    await fs.mkdir(layoutDir, { recursive: true });
 
-    // Build imports based on available features
-    let imports = `import { Settings, LogOut } from 'lucide-react';\n`;
+    // Build imports dynamically
+    let imports = "";
 
-    if (hasRouter) {
-      imports += `import { Link, useLocation } from 'react-router';\n`;
+    if (hasRouter) imports += `import { Link, useLocation } from 'react-router';\n`;
+    if (hasI18n) imports += `import { useTranslation } from 'react-i18next';\n`;
+
+    if (hasShadcn) {
+      imports += `import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";\n`;
+      execSync("npx shadcn@latest add select", {
+        stdio: "inherit",
+        cwd: projectPath,
+      });
     }
 
-    if (hasI18n) {
-      imports += `import { useTranslation } from 'react-i18next';\n`;
-    }
-
-    // Build the header component
+    // Build Header component content
     const headerComponent = `${imports}
 interface HeaderProps {
   currentLanguage?: string;
@@ -47,8 +61,8 @@ const Header = ({
   ${hasI18n ? "const { t } = useTranslation('global');" : ""}
 
   const navItems = [
-    { href: '/', label: ${hasI18n ? "t('welcome')" : "'Home'"} },
-    { href: '/about', label: 'About' },
+    { href: '/', label: ${hasI18n ? "t('home')" : "'Home'"} },
+    { href: '/about', label: ${hasI18n ? "t('about')" : "'About'"} },
   ];
 
   return (
@@ -88,10 +102,22 @@ const Header = ({
           <div className="flex items-center space-x-2">
             ${
               hasI18n
-                ? `
+                ? hasShadcn
+                  ? `<Select value={currentLanguage} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="w-25">
+                <SelectValue placeholder={t("language")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="en">🇬🇧 EN</SelectItem>
+                  <SelectItem value="fr">🇫🇷 FR</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>`
+                  : `
             <select
               value={currentLanguage}
-              onChange={(e) => handleLanguageChange(e.target.value)}
+              onChange={(e) => handleLanguageChange?.(e.target.value)}
               className="px-2 py-1 border rounded-md text-sm"
             >
               <option value="en">🇬🇧 EN</option>
@@ -105,36 +131,36 @@ const Header = ({
       </div>
     </header>
   );
-}
+};
 
 export default Header;
 `;
 
-    const LayoutDir = path.join(projectPath, "src", "components", "Layout");
+    // Write Header.tsx
+    await fs.writeFile(path.join(layoutDir, "Header.tsx"), headerComponent, "utf8");
 
-    await writeFile(path.join(LayoutDir, "Header.tsx"), headerComponent);
-
-    let publicLayoutContent = await readFile(path.join(LayoutDir, "PublicLayout.tsx"));
-
-    publicLayoutContent = `import Header from "./Header";
-    ${publicLayoutContent}`;
-
-    publicLayoutContent = publicLayoutContent.replace(
-      `<div className="h-screen overflow-x-hidden flex flex-col">`,
-      `<div className="h-screen overflow-x-hidden flex flex-col">
+    // Optional: Insert Header import and usage into PublicLayout.tsx if it exists
+    const publicLayoutPath = path.join(layoutDir, "PublicLayout.tsx");
+    try {
+      let publicLayout = await fs.readFile(publicLayoutPath, "utf8");
+      publicLayout = `import Header from "./Header";\n${publicLayout}`;
+      publicLayout = publicLayout.replace(
+        `<div className="h-screen overflow-x-hidden flex flex-col">`,
+        `<div className="h-screen overflow-x-hidden flex flex-col">
         <Header
           currentLanguage={i18n.language}
           handleLanguageChange={(lang: string) => i18n.changeLanguage(lang)}
         />`
-    );
-    await writeFile(path.join(LayoutDir, "PublicLayout.tsx"), publicLayoutContent);
+      );
+      await fs.writeFile(publicLayoutPath, publicLayout, "utf8");
+    } catch {
+      console.log(chalk.yellow("⚠️ No PublicLayout.tsx found — skipping layout update."));
+    }
 
     spinner.succeed(chalk.green("Header component created!"));
-
-    console.log(chalk.green("✓ Header component is ready!"));
-    console.log(chalk.gray("  - Component: src/components/Header.tsx"));
+    console.log(chalk.gray("  - Location: src/components/Layout/Header.tsx"));
   } catch (error) {
     spinner.fail(chalk.red("Failed to create Header component"));
-    throw error;
+    console.error(error);
   }
 };

@@ -2,7 +2,11 @@ import { execSync } from "child_process";
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFile } from "../utils/fileHelpers.ts";
+import { writeFile } from "../../utils/fileHelpers.ts";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Sets up Shadcn UI in the React project
@@ -61,6 +65,7 @@ export const setupShadcn = async (projectPath: string) => {
     await writeFile(tsconfigAppPath, JSON.stringify(tsconfigApp, null, 2));
 
     // 3. Create tsconfig.node.json from scratch
+    const fs = await import("fs/promises");
     const tsconfigNodePath = path.join(projectPath, "tsconfig.node.json");
     const tsconfigNode = {
       compilerOptions: {
@@ -106,20 +111,7 @@ export const setupShadcn = async (projectPath: string) => {
 
     // 5. Create vite.config.ts from scratch
     const viteConfigPath = path.join(projectPath, "vite.config.ts");
-    const viteConfig = `import path from "path"
-import tailwindcss from "@tailwindcss/vite"
-import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-})`;
+    const viteConfig = await fs.readFile(path.join(__dirname, "vite.config.txt"), "utf-8");
     await writeFile(viteConfigPath, viteConfig);
 
     // Run the CLI - NOW IT SHOULD DETECT THE IMPORT ALIAS
@@ -131,14 +123,7 @@ export default defineConfig({
 
     // 6. Create tailwind.config.js from scratch
     const tailwindConfigPath = path.join(projectPath, "tailwind.config.js");
-    const tailwindConfig = `/** @type {import('tailwindcss').Config} */
-export default {
-  content: ["./index.html", "./src/**/*.{html,js,ts,jsx,tsx}"],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};`;
+    const tailwindConfig = await fs.readFile(path.join(__dirname, "tailwind.config.txt"), "utf-8");
     await writeFile(tailwindConfigPath, tailwindConfig);
 
     // Add components

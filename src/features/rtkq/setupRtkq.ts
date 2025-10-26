@@ -1,7 +1,11 @@
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFile, readFile } from "../utils/fileHelpers.ts";
+import { writeFile, readFile } from "../../utils/fileHelpers.ts";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Sets up RTK Query in the React project
@@ -20,56 +24,8 @@ export const setupRTKQuery = async (projectPath: string) => {
     const servicesDir = path.join(projectPath, "src", "services");
 
     // Create a sample API service
-    const apiService = `import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-// Define a service using a base URL and expected endpoints
-export const apiSlice = createApi({
-  reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),
-  tagTypes: ['Post', 'User'],
-  endpoints: (builder) => ({
-    getPosts: builder.query({
-      query: () => '/posts',
-      providesTags: ['Post'],
-    }),
-    getPostById: builder.query({
-      query: (id) => \`/posts/\${id}\`,
-      providesTags: (result, error, id) => [{ type: 'Post', id }],
-    }),
-    createPost: builder.mutation({
-      query: (newPost) => ({
-        url: '/posts',
-        method: 'POST',
-        body: newPost,
-      }),
-      invalidatesTags: ['Post'],
-    }),
-    updatePost: builder.mutation({
-      query: ({ id, ...patch }) => ({
-        url: \`/posts/\${id}\`,
-        method: 'PUT',
-        body: patch,
-      }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Post', id }],
-    }),
-    deletePost: builder.mutation({
-      query: (id) => ({
-        url: \`/posts/\${id}\`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: ['Post'],
-    }),
-  }),
-});
-
-export const {
-  useGetPostsQuery,
-  useGetPostByIdQuery,
-  useCreatePostMutation,
-  useUpdatePostMutation,
-  useDeletePostMutation,
-} = apiSlice;
-`;
+    const fs = await import("fs/promises");
+    const apiService = await fs.readFile(path.join(__dirname, "api.txt"), "utf-8");
 
     await writeFile(path.join(servicesDir, "api.ts"), apiService);
 

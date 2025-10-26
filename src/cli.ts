@@ -1,15 +1,14 @@
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { setupReactProject } from "./setupReact.ts";
-import { setupTailwind } from "./features/tailwind.ts";
-import { setupShadcn } from "./features/shadcn.ts";
-import { setupRedux } from "./features/redux.ts";
-import { setupRouter } from "./features/router.ts";
-import { setupI18n } from "./features/i18n.ts";
-import { setupRTKQuery } from "./features/rtkQuery.ts";
-import { setupReactHookForm } from "./features/reactHookForm.ts";
-import { setupHeader } from "./features/header.ts";
-
+import { setupTailwind } from "./features/tailwind/setupTailwind.ts";
+import { setupShadcn } from "./features/shadcn/setupShadcn.ts";
+import { setupRedux } from "./features/redux/setupRedux.ts";
+import { setupRTKQuery } from "./features/rtkq/setupRtkq.ts";
+import { setupI18n } from "./features/translation/setupTranslation.ts";
+import { setupRouter } from "./features/router/setupRouter.ts";
+import { setupReactHookForm } from "./features/reactHookForm/setupRHF.ts";
+import { setupHeader } from "./features/header/setupHeader.ts";
 /**
  * Main CLI function that orchestrates the project setup
  */
@@ -121,12 +120,12 @@ export const setupCLI = async () => {
       console.log(chalk.yellow("\n⚠️  Skipping RTK Query (requires Redux Toolkit)"));
     }
 
-    if (answers.useRouter) {
-      await setupRouter(projectPath);
-    }
-
     if (answers.useI18n) {
       await setupI18n(projectPath);
+    }
+
+    if (answers.useRouter) {
+      await setupRouter(projectPath, answers.useI18n);
     }
 
     if (answers.useReactHookForm) {

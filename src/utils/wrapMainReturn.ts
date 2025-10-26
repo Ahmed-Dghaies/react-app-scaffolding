@@ -29,9 +29,6 @@ export const wrapMainReturn = async (
   const appPath = path.join(projectPath, "src", "MAIN.tsx");
   let content = await fs.readFile(appPath, "utf-8");
 
-  console.log("=== DEBUGGING ===");
-  console.log("Content:", content);
-
   // Add import if not already present
   if (!content.includes(wrapperImport.trim())) {
     content = addImportToContent(content, wrapperImport);
@@ -40,14 +37,11 @@ export const wrapMainReturn = async (
   // Look for the JSX inside createRoot().render()
   const renderMatch = content.match(/\.render\s*\(\s*([\s\S]*?)\s*\)/);
 
-  console.log("renderMatch:", renderMatch);
-
   if (!renderMatch) {
     throw new Error("Could not find createRoot().render() statement");
   }
 
   const currentJsx = renderMatch[1].trim();
-  console.log("Current JSX content:", currentJsx);
 
   // Build the wrapper - handle the case where we might have commas or semicolons
   const props = options.props ? ` ${options.props}` : "";

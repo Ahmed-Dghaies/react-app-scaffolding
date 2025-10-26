@@ -1,0 +1,16 @@
+import { useTranslation } from "react-i18next";
+import { Outlet } from "react-router";
+
+const PublicLayout = () => {
+  const { i18n } = useTranslation();
+
+  return (
+    <div className="h-screen overflow-x-hidden flex flex-col">
+      <main className="flex-grow flex flex-col justify-center p-2">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+export default PublicLayout;

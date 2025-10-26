@@ -1,0 +1,19 @@
+import { Route, Routes } from "react-router";
+
+import PublicLayout from "@/components/Layout/PublicLayout";
+import Home from "@/pages/Home";
+import About from "@/pages/About";
+
+const App = () => {
+  return (
+    <Routes>
+      <Route element={<PublicLayout />}>
+        <Route path="/about" element={<About />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="*" element={<Home />} />
+      </Route>
+    </Routes>
+  );
+};
+
+export default App;

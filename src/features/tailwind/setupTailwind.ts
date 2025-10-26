@@ -1,20 +1,21 @@
-import { execSync } from "child_process";
+import { fileURLToPath } from "url";
 import path from "path";
+import { execSync } from "child_process";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFile } from "../utils/fileHelpers.ts";
+import { writeFile } from "../../utils/fileHelpers.ts";
 
-/**
- * Sets up Tailwind CSS in the React project
- * @param {string} projectPath - Path to the project
- */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export const setupTailwind = async (projectPath: string) => {
   console.log(chalk.blue("\n🎨 Setting up Tailwind CSS..."));
 
   const spinner = ora("Installing Tailwind CSS dependencies...").start();
 
   try {
-    // Install Tailwind and its dependencies
+    const fs = await import("fs/promises");
+
     execSync("npm install tailwindcss @tailwindcss/vite", {
       stdio: "inherit",
       cwd: projectPath,
@@ -26,51 +27,22 @@ export const setupTailwind = async (projectPath: string) => {
     });
 
     spinner.succeed(chalk.green("Tailwind CSS dependencies installed!"));
-
-    // Initialize Tailwind config
     spinner.start("Creating Tailwind configuration...");
 
-    // Create tailwind.config.js with proper content paths
-    const tailwindConfig = `/** @type {import('tailwindcss').Config} */
-        module.exports = {
-        content: [
-            "./src/**/*.{js,jsx,ts,tsx}",
-        ],
-        theme: {
-            extend: {},
-        },
-        plugins: [],
-        }`;
+    const tailwindTemplatePath = path.join(__dirname, "tailwind.config.txt");
+    const viteTemplatePath = path.join(__dirname, "vite.config.txt");
+
+    const tailwindConfig = await fs.readFile(tailwindTemplatePath, "utf8");
+    const viteConfig = await fs.readFile(viteTemplatePath, "utf8");
 
     await writeFile(path.join(projectPath, "tailwind.config.js"), tailwindConfig);
-
-    // Update vite config
-    const viteConfig = `import path from "path"
-import tailwindcss from "@tailwindcss/vite"
-import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-})`;
-
     await writeFile(path.join(projectPath, "vite.config.ts"), viteConfig);
 
     spinner.text = "Updating CSS files...";
-
-    // Update src/index.css with Tailwind directives
     const indexCSS = `@import "tailwindcss";`;
-
     await writeFile(path.join(projectPath, "src", "index.css"), indexCSS);
 
     spinner.succeed(chalk.green("Tailwind CSS configured successfully!"));
-
     console.log(chalk.green("✓ Tailwind CSS is ready to use!"));
   } catch (error) {
     spinner.fail(chalk.red("Failed to setup Tailwind CSS"));

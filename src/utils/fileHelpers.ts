@@ -13,6 +13,14 @@ export const writeFile = async (filePath: string, content: string) => {
 };
 
 /**
+ * Deletes a file
+ * @param {string} filePath - Full path to the file
+ */
+export const deleteFile = async (filePath: string) => {
+  await fs.unlink(filePath);
+};
+
+/**
  * Reads a file and returns its content
  * @param {string} filePath - Full path to the file
  * @returns {Promise<string>} - File content

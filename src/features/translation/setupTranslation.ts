@@ -2,7 +2,11 @@ import { execSync } from "child_process";
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFile } from "../utils/fileHelpers.ts";
+import { writeFile } from "../../utils/fileHelpers.ts";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Sets up i18next for internationalization
@@ -35,81 +39,15 @@ export const setupI18n = async (projectPath: string) => {
     await fs.mkdir(frDir, { recursive: true });
 
     // English translations
-    const enGlobal = `{
-  "app_title": "My React App",
-  "welcome": "Welcome",
-  "hello": "Hello",
-  "goodbye": "Goodbye",
-  "language": "Language",
-  "settings": "Settings"
-}
-`;
-
-    await writeFile(path.join(enDir, "global.json"), enGlobal);
+    const enGlobal = await fs.readFile(path.join(__dirname, "./global.en.ts"), "utf-8");
+    await writeFile(path.join(enDir, "global.ts"), enGlobal);
 
     // French translations
-    const frGlobal = `{
-  "app_title": "Mon Application React",
-  "welcome": "Bienvenue",
-  "hello": "Bonjour",
-  "goodbye": "Au revoir",
-  "language": "Langue",
-  "settings": "Paramètres"
-}
-`;
-
-    await writeFile(path.join(frDir, "global.json"), frGlobal);
+    const frGlobal = await fs.readFile(path.join(__dirname, "./global.fr.ts"), "utf-8");
+    await writeFile(path.join(frDir, "global.ts"), frGlobal);
 
     // Create i18n configuration file with Vite glob import
-    const i18nConfig = `import i18n from "i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
-import { initReactI18next } from "react-i18next";
-
-import type { Resource } from "i18next";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const modules: Record<string, { default: any }> = import.meta.glob("./assets/languages/*/*.json", {
-  eager: true,
-});
-
-const namespaces = ["global"];
-
-const loadTranslations = () => {
-  const resources: Resource = {};
-
-  for (const path in modules) {
-    const match = path.match(/\.\/assets\/languages\/(.*?)\/(.*?)\.json$/);
-    if (!match) continue;
-
-    const [, lang, ns] = match;
-    if (!resources[lang]) resources[lang] = {};
-
-    resources[lang][ns] = modules[path].default;
-  }
-  return resources;
-};
-
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources: loadTranslations(),
-    fallbackLng: "fr",
-    ns: namespaces,
-    defaultNS: "global",
-    keySeparator: false,
-    interpolation: {
-      escapeValue: false,
-    },
-    detection: {
-      lookupLocalStorage: "i18nextLng",
-      order: ["localStorage"],
-      caches: ["localStorage"],
-    },
-  });
-
-export default i18n;`;
-
+    const i18nConfig = await fs.readFile(path.join(__dirname, "./i18n.txt"), "utf-8");
     await writeFile(path.join(projectPath, "src", "i18n.ts"), i18nConfig);
 
     spinner.text = "Adding i18n to main.tsx...";
@@ -121,8 +59,8 @@ export default i18n;`;
     // Add i18n import at the top
     if (!mainContent.includes("import './i18n'")) {
       mainContent = mainContent.replace(
-        "import './index.css';",
-        "import './index.css';\\nimport './i18n';"
+        "import App from './App.tsx'",
+        `import App from './App.tsx';\nimport './i18n';`
       );
       await fs.writeFile(mainPath, mainContent);
     }
@@ -131,10 +69,9 @@ export default i18n;`;
 
     console.log(chalk.green("✓ i18next is ready to use!"));
     console.log(chalk.gray("  - Config: src/i18n.ts"));
-    console.log(chalk.gray("  - English: src/assets/languages/en/global.json"));
-    console.log(chalk.gray("  - French: src/assets/languages/fr/global.json"));
+    console.log(chalk.gray("  - English: src/assets/languages/en/global.ts"));
+    console.log(chalk.gray("  - French: src/assets/languages/fr/global.ts"));
     console.log(chalk.gray("  - Use: const { t } = useTranslation('global');"));
-    console.log(chalk.gray("  - Translation keys: t('welcome'), t('hello'), etc."));
   } catch (error) {
     spinner.fail(chalk.red("Failed to setup i18next"));
     throw error;

@@ -1,0 +1,29 @@
+import { createAppSlice } from "@/store/createAppSlice";
+
+export interface CounterState {
+  value: number;
+}
+
+const initialState: CounterState = {
+  value: 0,
+};
+
+export const counterSlice = createAppSlice({
+  name: 'counter',
+  initialState,
+  reducers: (create) => ({
+    increment: create.reducer<void>((state) => {
+      state.value += 1;
+    }),
+    decrement: create.reducer<void>((state) => {
+      state.value -= 1;
+    }),
+    incrementByAmount: create.reducer<number>((state, action) => {
+      state.value += action.payload;
+    }),
+  }),
+});
+
+export const { increment, decrement, incrementByAmount } = counterSlice.actions;
+
+export default counterSlice.reducer;
