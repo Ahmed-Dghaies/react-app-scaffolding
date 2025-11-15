@@ -1,0 +1,59 @@
+import { useMemo } from "react";
+
+import { arktypeResolver } from "@hookform/resolvers/arktype";
+import { useForm } from "react-hook-form";
+
+import useEffectOnUpdate from "@/hooks/useEffectOnUpdate";
+
+import RegistrationSchema, {
+  type RegistrationSchemaInputType,
+  RegistrationSchemaOutputType,
+} from "./schema";
+import { doesPasswordFitRequirements } from "./utils";
+
+export const useRegistrationForm = (defaultValues?: RegistrationSchemaInputType) => {
+  const methods = useForm<RegistrationSchemaInputType, unknown, RegistrationSchemaOutputType>({
+    resolver: arktypeResolver(RegistrationSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+    defaultValues: defaultValues || {
+      username: "",
+      firstName: "",
+      lastName: "",
+      passwordWithConfirmation: {
+        password: "",
+        confirmPassword: "",
+      },
+    },
+  });
+
+  const { watch, trigger } = methods;
+
+  const password = watch("passwordWithConfirmation.password");
+  const confirmPassword = watch("passwordWithConfirmation.confirmPassword");
+
+  const passwordCriterias = useMemo(() => doesPasswordFitRequirements(password), [password]);
+
+  useEffectOnUpdate(
+    confirmPassword,
+    () => {
+      trigger("passwordWithConfirmation.confirmPassword");
+    },
+    [confirmPassword, trigger],
+  );
+
+  useEffectOnUpdate(
+    password,
+    () => {
+      if (confirmPassword?.length > 0) {
+        trigger("passwordWithConfirmation.confirmPassword");
+      }
+    },
+    [password, trigger],
+  );
+
+  return {
+    methods,
+    passwordCriterias,
+  };
+};

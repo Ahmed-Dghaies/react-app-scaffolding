@@ -1,0 +1,56 @@
+import { scope } from "arktype";
+
+import { doesPasswordFitRequirements } from "./utils";
+
+const registrationScope = scope({
+  "#password": () =>
+    registrationScope.type("string>7").narrow((value, ctx) => {
+      const { isValid } = doesPasswordFitRequirements(value);
+
+      if (!isValid) {
+        return ctx.reject({
+          actual: "",
+          expected:
+            "must contain at least 3 of the following: uppercase letter, lowercase letter, digit, special character",
+        });
+      }
+      return true;
+    }),
+  "#passwordWithConfirmation": () =>
+    registrationScope
+      .type({
+        password: "password",
+        confirmPassword: "string",
+      })
+      .narrow((value, ctx) => {
+        if (value.password !== value.confirmPassword) {
+          return ctx.reject({
+            message: "Passwords do not match",
+            path: ["passwordWithConfirmation.confirmPassword"],
+          });
+        }
+        return true;
+      }),
+  fullSchema: () =>
+    registrationScope
+      .type({
+        username: "string>0",
+        firstName: "string>0",
+        lastName: "string>0",
+        passwordWithConfirmation: "passwordWithConfirmation",
+      })
+      .pipe((value) => {
+        return {
+          username: value.username,
+          firstName: value.firstName,
+          lastName: value.lastName,
+          password: value.passwordWithConfirmation.password,
+        };
+      }),
+});
+
+const RegistrationSchema = registrationScope.export().fullSchema;
+
+export default RegistrationSchema;
+export type RegistrationSchemaInputType = typeof RegistrationSchema.inferIn;
+export type RegistrationSchemaOutputType = typeof RegistrationSchema.inferOut;

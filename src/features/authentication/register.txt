@@ -1,0 +1,92 @@
+import { FormProvider } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import PasswordField from "@/components/PasswordField/PasswordField";
+import { FormTextField } from "@/components/TextField";
+import { Button } from "@/components/ui/button";
+import { useRegistrationForm } from "@/features/authentication/hooks/registration/useRegistrationForm";
+
+import type { RegistrationPayload } from "@/features/authentication/types/registration";
+
+interface RegistrationFormProps {
+  isSubmissionOngoing: boolean;
+  onSubmit: (data: RegistrationPayload) => void;
+  validationBtnLabel?: string;
+}
+
+const RegistrationForm = ({
+  isSubmissionOngoing,
+  onSubmit,
+  validationBtnLabel,
+}: RegistrationFormProps) => {
+  const { methods, passwordCriterias } = useRegistrationForm();
+  const { t } = useTranslation();
+
+  const {
+    handleSubmit,
+    control,
+    formState: { isValid },
+  } = methods;
+
+  return (
+    <FormProvider {...methods}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="mx-4 space-y-8"
+        aria-label="User Registration Form"
+      >
+        <div className="flex flew-row space-x-4">
+          <div className="max-w-1/2 flex flex-col grow space-y-4">
+            <FormTextField
+              control={control}
+              label={t("global:labels:email")}
+              name="username"
+              placeholder={t("global:placeholders:email")}
+            />
+            <FormTextField
+              control={control}
+              label={t("global:labels:first_name")}
+              name="firstName"
+              placeholder={t("global:placeholders:name")}
+            />
+            <FormTextField
+              control={control}
+              label={t("global:labels:last_name")}
+              name="lastName"
+              placeholder={t("global:placeholders:name")}
+            />
+          </div>
+          <div className="max-w-1/2 flex flex-col grow space-y-4">
+            <PasswordField
+              control={control}
+              label={t("global:labels:password")}
+              name="passwordWithConfirmation.password"
+              placeholder={t("global:placeholders:password")}
+              isValid={passwordCriterias.isValid}
+              hasLowerCase={passwordCriterias.hasLowerCase}
+              hasUpperCase={passwordCriterias.hasUpperCase}
+              hasDigit={passwordCriterias.hasDigit}
+              hasSpecial={passwordCriterias.hasSpecial}
+            />
+            <FormTextField
+              control={control}
+              label={t("global:labels:confirm_password")}
+              name="passwordWithConfirmation.confirmPassword"
+              type="password"
+              placeholder={t("global:placeholders:password")}
+            />
+          </div>
+        </div>
+        <div className="flex">
+          <Button className="flex-grow" type="submit" disabled={isSubmissionOngoing || !isValid}>
+            {isSubmissionOngoing
+              ? t("global:on_going_loading")
+              : validationBtnLabel ?? t("authentication:register:submit")}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+export default RegistrationForm;

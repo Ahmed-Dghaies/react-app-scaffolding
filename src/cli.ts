@@ -9,6 +9,7 @@ import { setupI18n } from "./features/translation/setupTranslation.ts";
 import { setupRouter } from "./features/router/setupRouter.ts";
 import { setupReactHookForm } from "./features/reactHookForm/setupRHF.ts";
 import { setupHeader } from "./features/header/setupHeader.ts";
+import { setupAuthentication } from "./features/authentication/setupAuthentication.ts";
 /**
  * Main CLI function that orchestrates the project setup
  */
@@ -22,6 +23,7 @@ type Answers = {
   useI18n: boolean;
   useRTKQuery: boolean;
   useReactHookForm: boolean;
+  useAuthentication: boolean;
 };
 
 export const setupCLI = async () => {
@@ -92,6 +94,13 @@ export const setupCLI = async () => {
         message: "Do you want to add a Header component?",
         default: true,
       },
+      {
+        type: "confirm",
+        name: "useAuthentication",
+        message: "Do you want to add authentication feature?",
+        when: (answers: Answers) => answers.useReactHookForm,
+        default: true,
+      },
     ]);
 
     console.log(chalk.cyan("\n📦 Creating your project...\n"));
@@ -134,6 +143,10 @@ export const setupCLI = async () => {
 
     if (answers.useHeader) {
       await setupHeader(projectPath, answers.useRouter, answers.useI18n, answers.useShadcn);
+    }
+
+    if (answers.useAuthentication) {
+      await setupAuthentication(projectPath);
     }
 
     // Print final instructions

@@ -1,0 +1,52 @@
+import { FormProvider, SubmitHandler } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import { FormTextField } from "@/components/TextField";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardFooter } from "@/components/ui/card";
+
+import { useLoginForm } from "../../hooks/useLoginForm";
+
+import type { LoginPayload } from "@/features/authentication/types/login";
+
+
+type Props = {
+  login: SubmitHandler<LoginPayload>;
+  isLoading: boolean;
+};
+
+const LoginForm = ({ login, isLoading }: Props) => {
+  const { methods } = useLoginForm();
+  const { t } = useTranslation();
+
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(login)} className="space-y-4" noValidate>
+        <CardContent className="grid gap-4">
+          <FormTextField
+            name="username"
+            label={t("authentication:login:username")}
+            placeholder={t("authentication:login:username_placeholder")}
+          />
+          <FormTextField
+            type="password"
+            name="password"
+            label={t("authentication:login:password")}
+            placeholder="********"
+          />
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+          <Button
+            className="w-full cursor-pointer"
+            type="submit"
+            disabled={isLoading || !methods.formState.isValid}
+          >
+            {t(isLoading ? "authentication:login:login_loading" : "authentication:login:submit")}
+          </Button>
+        </CardFooter>
+      </form>
+    </FormProvider>
+  );
+};
+
+export default LoginForm;

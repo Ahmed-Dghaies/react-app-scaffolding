@@ -1,0 +1,27 @@
+import Logo from "@/assets/logos/Logo";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+
+const AuthCardWrapper = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
+      <Card className={`w-full ${className ?? ""}`}>
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-center mb-4">
+            <span className="max-w-50">
+              <Logo />
+            </span>
+          </div>
+        </CardHeader>
+        {children}
+      </Card>
+    </div>
+  );
+};
+
+export default AuthCardWrapper;

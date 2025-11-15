@@ -1,0 +1,16 @@
+export interface LoginPayload {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  access: string;
+  refresh: string;
+}
+
+export type RegistrationPayload = {
+  username: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+};

@@ -1,0 +1,17 @@
+import { arktypeResolver } from "@hookform/resolvers/arktype";
+import { useForm } from "react-hook-form";
+
+import { LoginSchema, type LoginSchemaType } from "@/features/authentication/types/login";
+
+export const useLoginForm = () => {
+  const methods = useForm<LoginSchemaType>({
+    resolver: arktypeResolver(LoginSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: { username: "", password: "" },
+  });
+
+  return {
+    methods,
+  };
+};
