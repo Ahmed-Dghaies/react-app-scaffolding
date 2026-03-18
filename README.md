@@ -18,31 +18,31 @@ A powerful CLI tool to scaffold React 18 projects with optional features like Ta
 
 ### Global Installation
 
-\`\`\`bash
+```bash
 npm install -g react-app-scaffolding
-\`\`\`
+```
 
 ### Usage
 
-\`\`\`bash
+```bash
 react-app-scaffolding
-\`\`\`
+```
 
 ### Local Development
 
 1. Clone the repository
 2. Install dependencies:
-   \`\`\`bash
+   ```bash
    npm install
-   \`\`\`
+   ```
 3. Link the CLI globally:
-   \`\`\`bash
+   ```bash
    npm link
-   \`\`\`
+   ```
 4. Run the CLI:
-   \`\`\`bash
+   ```bash
    react-app-scaffolding
-   \`\`\`
+   ```
 
 ## What Gets Created
 
@@ -109,7 +109,7 @@ react-app-scaffolding
 
 ## Project Structure
 
-\`\`\`
+```
 my-react-app/
 ├── src/
 │ ├── assets/
@@ -140,34 +140,34 @@ my-react-app/
 ├── tailwind.config.js # Tailwind config (if selected)
 ├── components.json # Shadcn config (if selected)
 └── package.json
-\`\`\`
+```
 
 ## Multiple Providers
 
 When you select multiple features (Redux + Router), the CLI automatically nests providers correctly:
 
-\`\`\`tsx
+```tsx
 function App() {
-return (
-<Provider store={store}>
-<RouterProvider router={router}>
-{/_ Your app content _/}
-</RouterProvider>
-</Provider>
-);
+   return (
+      <Provider store={store}>
+         <RouterProvider router={router}>
+            {/_ Your app content _/}
+         </RouterProvider>
+      </Provider>
+   );
 }
-\`\`\`
+```
 
 ## Adding More Shadcn Components
 
 After setup, you can add more Shadcn components:
 
-\`\`\`bash
+```bash
 cd my-react-app
 npx shadcn@latest add button
 npx shadcn@latest add card
 npx shadcn@latest add dialog
-\`\`\`
+```
 
 ## Requirements
 
@@ -186,65 +186,62 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Using i18next
 
-\`\`\`tsx
+```tsx
 import { useTranslation } from 'react-i18next';
 
 function MyComponent() {
-const { t, i18n } = useTranslation('global');
+   const { t, i18n } = useTranslation('global');
 
-return (
-
-<div>
-<h1>{t('welcome')}</h1>
-<button onClick={() => i18n.changeLanguage('fr')}>
-Switch to French
-</button>
-</div>
-);
+   return (
+      <div>
+         <h1>{t('welcome')}</h1>
+         <button onClick={() => i18n.changeLanguage('fr')}>
+            Switch to French
+         </button>
+      </div>
+   );
 }
-\`\`\`
+```
 
 ### Using RTK Query
 
-\`\`\`tsx
+```tsx
 import { useGetPostsQuery, useCreatePostMutation } from './services/api';
 
 function Posts() {
-const { data: posts, isLoading } = useGetPostsQuery();
-const [createPost] = useCreatePostMutation();
+   const { data: posts, isLoading } = useGetPostsQuery();
+   const [createPost] = useCreatePostMutation();
 
-if (isLoading) return <div>Loading...</div>;
+   if (isLoading) return <div>Loading...</div>;
 
-return (
-
-<div>
-{posts?.map(post => <div key={post.id}>{post.title}</div>)}
-</div>
-);
+   return (
+      <div>
+         {posts?.map(post => <div key={post.id}>{post.title}</div>)}
+      </div>
+   );
 }
-\`\`\`
+```
 
 ### Using React Hook Form
 
-\`\`\`tsx
+```tsx
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import \* as z from 'zod';
+import * as z from 'zod';
 
 const schema = z.object({
-email: z.string().email(),
+   email: z.string().email(),
 });
 
 function MyForm() {
-const { register, handleSubmit } = useForm({
-resolver: zodResolver(schema),
+   const { register, handleSubmit } = useForm({
+      resolver: zodResolver(schema),
 });
 
-return (
-
-<form onSubmit={handleSubmit(data => console.log(data))}>
-<input {...register('email')} />
-<button type="submit">Submit</button>
-</form>
-);
+   return (
+      <form onSubmit={handleSubmit(data => console.log(data))}>
+         <input {...register('email')} />
+         <button type="submit">Submit</button>
+      </form>
+   );
 }
